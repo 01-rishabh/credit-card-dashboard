@@ -1,39 +1,66 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  Upload, 
-  FileText, 
-  PieChart, 
-  TrendingUp, 
-  DollarSign, 
-  Award, 
-  AlertCircle, 
-  Search, 
-  ArrowUpRight, 
-  ArrowDownRight, 
-  Coffee, 
-  ShoppingBag, 
-  Car, 
-  Home, 
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Grid,
+  LinearProgress,
+  Button,
+  Container,
+  AppBar,
+  Toolbar,
+  Avatar,
+  TextField,
+  InputAdornment,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Chip,
+  Stack,
+  useTheme,
+  ThemeProvider,
+  createTheme,
+  CssBaseline
+} from '@mui/material';
+import {
+  Upload,
+  FileText,
+  PieChart,
+  TrendingUp,
+  DollarSign,
+  Award,
+  AlertCircle,
+  Search,
+  ArrowUpRight,
+  ArrowDownRight,
+  Coffee,
+  ShoppingBag,
+  Car,
+  Home,
   Zap,
   Shield,
   Trash2,
-  X,
   FileWarning
 } from 'lucide-react';
 
 // --- Utility / Logic Helpers ---
 
 const CATEGORIES = {
-  DINING: { color: 'bg-orange-500', label: 'Dining & Food', icon: Coffee, pointsMultiplier: 3 },
-  SHOPPING: { color: 'bg-blue-500', label: 'Shopping', icon: ShoppingBag, pointsMultiplier: 1 },
-  TRANSPORT: { color: 'bg-purple-500', label: 'Transport', icon: Car, pointsMultiplier: 2 },
-  HOUSING: { color: 'bg-teal-500', label: 'Housing & Utilities', icon: Home, pointsMultiplier: 1 },
-  ENTERTAINMENT: { color: 'bg-pink-500', label: 'Entertainment', icon: Zap, pointsMultiplier: 2 },
-  GROCERY: { color: 'bg-green-500', label: 'Groceries', icon: ShoppingBag, pointsMultiplier: 2 },
-  OTHER: { color: 'bg-gray-400', label: 'Other', icon: FileText, pointsMultiplier: 1 },
+  DINING: { color: '#f97316', label: 'Dining & Food', icon: Coffee, pointsMultiplier: 3 }, // Orange-500
+  SHOPPING: { color: '#3b82f6', label: 'Shopping', icon: ShoppingBag, pointsMultiplier: 1 }, // Blue-500
+  TRANSPORT: { color: '#a855f7', label: 'Transport', icon: Car, pointsMultiplier: 2 }, // Purple-500
+  HOUSING: { color: '#14b8a6', label: 'Housing & Utilities', icon: Home, pointsMultiplier: 1 }, // Teal-500
+  ENTERTAINMENT: { color: '#ec4899', label: 'Entertainment', icon: Zap, pointsMultiplier: 2 }, // Pink-500
+  GROCERY: { color: '#22c55e', label: 'Groceries', icon: ShoppingBag, pointsMultiplier: 2 }, // Green-500
+  OTHER: { color: '#9ca3af', label: 'Other', icon: FileText, pointsMultiplier: 1 }, // Gray-400
 };
 
-// Simple keyword matching for demo categorization
 const categorizeTransaction = (description) => {
   const desc = description.toLowerCase();
   if (desc.includes('uber') || desc.includes('lyft') || desc.includes('gas') || desc.includes('shell')) return 'TRANSPORT';
@@ -60,70 +87,135 @@ const MOCK_DATA = [
   { id: 12, date: '2023-10-22', description: 'Payment Received', amount: -1500.00, type: 'credit' },
 ];
 
-// --- Components ---
+// --- Custom Components ---
 
-const StatCard = ({ title, value, subtext, icon: Icon, colorClass }) => (
-  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-    <div className="flex justify-between items-start mb-4">
-      <div className={`p-3 rounded-xl ${colorClass} bg-opacity-10`}>
-        <Icon className={`w-6 h-6 ${colorClass.replace('bg-', 'text-')}`} />
-      </div>
-      {subtext && <span className="text-xs font-medium text-slate-400 bg-slate-50 px-2 py-1 rounded-full">{subtext}</span>}
-    </div>
-    <div>
-      <h3 className="text-slate-500 text-sm font-medium mb-1">{title}</h3>
-      <p className="text-2xl font-bold text-slate-800">{value}</p>
-    </div>
-  </div>
+const StatCard = ({ title, value, subtext, icon: Icon, colorBg, colorText }) => (
+  <Card sx={{ height: '100%', borderRadius: 4, boxShadow: '0px 2px 4px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+    <CardContent sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+        <Box sx={{ 
+          p: 1.5, 
+          borderRadius: 3, 
+          bgcolor: colorBg, 
+          color: colorText,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <Icon size={24} />
+        </Box>
+        {subtext && (
+          <Chip 
+            label={subtext} 
+            size="small" 
+            sx={{ bgcolor: '#f8fafc', color: '#94a3b8', fontWeight: 600, fontSize: '0.75rem' }} 
+          />
+        )}
+      </Box>
+      <Box>
+        <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 500, mb: 0.5 }}>
+          {title}
+        </Typography>
+        <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
+          {value}
+        </Typography>
+      </Box>
+    </CardContent>
+  </Card>
 );
 
-const ProgressBar = ({ label, amount, total, color, percentage }) => (
-  <div className="mb-4">
-    <div className="flex justify-between text-sm mb-1">
-      <span className="font-medium text-slate-700">{label}</span>
-      <span className="text-slate-500">${amount.toFixed(2)} ({percentage}%)</span>
-    </div>
-    <div className="w-full bg-slate-100 rounded-full h-2.5">
-      <div 
-        className={`h-2.5 rounded-full ${color}`} 
-        style={{ width: `${percentage}%` }}
-      ></div>
-    </div>
-  </div>
+const CategoryProgressBar = ({ label, amount, total, color, percentage }) => (
+  <Box sx={{ mb: 2 }}>
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+      <Typography variant="body2" sx={{ fontWeight: 600, color: '#334155' }}>{label}</Typography>
+      <Typography variant="body2" sx={{ color: '#64748b' }}>${amount.toFixed(2)} ({percentage}%)</Typography>
+    </Box>
+    <LinearProgress 
+      variant="determinate" 
+      value={Number(percentage)} 
+      sx={{ 
+        height: 10, 
+        borderRadius: 5, 
+        bgcolor: '#f1f5f9',
+        '& .MuiLinearProgress-bar': {
+          bgcolor: color,
+          borderRadius: 5,
+        }
+      }} 
+    />
+  </Box>
 );
 
 const InsightCard = ({ title, description, saving, type }) => (
-  <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl mb-3 flex items-start space-x-3">
-    <div className="mt-1">
+  <Paper 
+    elevation={0}
+    sx={{ 
+      p: 2, 
+      mb: 2, 
+      borderRadius: 3, 
+      bgcolor: '#eef2ff', 
+      border: '1px solid #e0e7ff',
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: 2
+    }}
+  >
+    <Box sx={{ mt: 0.5 }}>
       {type === 'warning' ? (
-        <AlertCircle className="w-5 h-5 text-amber-500" />
+        <AlertCircle size={20} color="#f59e0b" />
       ) : (
-        <TrendingUp className="w-5 h-5 text-indigo-600" />
+        <TrendingUp size={20} color="#4f46e5" />
       )}
-    </div>
-    <div className="flex-1">
-      <h4 className="font-semibold text-slate-800 text-sm">{title}</h4>
-      <p className="text-xs text-slate-600 mt-1 leading-relaxed">{description}</p>
+    </Box>
+    <Box sx={{ flex: 1 }}>
+      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b' }}>{title}</Typography>
+      <Typography variant="body2" sx={{ color: '#475569', mt: 0.5, lineHeight: 1.5 }}>{description}</Typography>
       {saving > 0 && (
-        <div className="mt-2 inline-flex items-center px-2 py-1 bg-white rounded-md border border-indigo-100 shadow-sm">
-          <span className="text-xs font-bold text-green-600">Potential Savings: ${saving}</span>
-        </div>
+        <Box sx={{ mt: 1.5, display: 'inline-block' }}>
+          <Chip 
+            label={`Potential Savings: $${saving}`} 
+            size="small"
+            sx={{ 
+              bgcolor: 'white', 
+              color: '#16a34a', 
+              fontWeight: 700,
+              border: '1px solid #dcfce7'
+            }} 
+          />
+        </Box>
       )}
-    </div>
-  </div>
+    </Box>
+  </Paper>
 );
 
-// --- Main Application ---
+// --- Main Theme Definition ---
 
-export default function StatementAnalyzer() {
-  const [view, setView] = useState('upload'); // 'upload' | 'dashboard'
+const theme = createTheme({
+  typography: {
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+  },
+  palette: {
+    background: {
+      default: '#f8fafc',
+    },
+    primary: {
+      main: '#4f46e5', // Indigo-600
+    },
+    text: {
+      primary: '#1e293b',
+      secondary: '#64748b',
+    }
+  }
+});
+
+export default function App() {
+  const [view, setView] = useState('upload');
   const [transactions, setTransactions] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
 
   // --- Processing Logic ---
-
   const processedData = useMemo(() => {
     if (transactions.length === 0) return null;
 
@@ -132,30 +224,26 @@ export default function StatementAnalyzer() {
     const categoryBreakdown = {};
     const insights = [];
 
-    // Initialize breakdown
     Object.keys(CATEGORIES).forEach(key => {
       categoryBreakdown[key] = { amount: 0, count: 0, key };
     });
 
     transactions.forEach(tx => {
-      if (tx.type === 'credit') return; // Skip payments
+      if (tx.type === 'credit') return;
 
       const catKey = categorizeTransaction(tx.description);
       const catConfig = CATEGORIES[catKey];
 
-      // Accumulate Spend
       totalSpend += tx.amount;
       categoryBreakdown[catKey].amount += tx.amount;
       categoryBreakdown[catKey].count += 1;
 
-      // Calculate Rewards
       const points = Math.floor(tx.amount * catConfig.pointsMultiplier);
       totalPoints += points;
-      tx.category = catKey; // Attach category to transaction object for list view
+      tx.category = catKey;
       tx.points = points;
     });
 
-    // Generate Insights
     if (categoryBreakdown.DINING.amount > 150) {
       insights.push({
         title: "High Dining Spend",
@@ -173,17 +261,11 @@ export default function StatementAnalyzer() {
       });
     }
 
-    // Sort categories by spend
     const sortedCategories = Object.values(categoryBreakdown)
       .filter(c => c.amount > 0)
       .sort((a, b) => b.amount - a.amount);
 
-    return {
-      totalSpend,
-      totalPoints,
-      sortedCategories,
-      insights
-    };
+    return { totalSpend, totalPoints, sortedCategories, insights };
   }, [transactions]);
 
   // --- Handlers ---
@@ -208,40 +290,29 @@ export default function StatementAnalyzer() {
 
   const processFile = (file) => {
     setError('');
-
-    // 1. Simple Extension Check
     const fileName = file.name.toLowerCase();
     if (fileName.endsWith('.pdf') || fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) {
-      setError("PDF and Excel files are not supported in this demo. Please convert your statement to CSV.");
+      setError("PDF and Excel files are not supported in this demo. Please convert to CSV.");
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (event) => {
       const text = event.target.result;
-
-      // 2. Binary Content Check (prevents loading garbage data)
-      // If the first 500 characters contain null bytes or control characters, it's likely binary.
       if (/[\x00-\x08\x0E-\x1F]/.test(text.slice(0, 500))) {
-         setError("This file appears to be binary (not text). Please upload a standard CSV file.");
+         setError("This file appears to be binary. Please upload a standard CSV file.");
          return;
       }
 
       const lines = text.split('\n');
-      
-      // Improved CSV Parsing with Validation
       const newTransactions = lines.slice(1).map((line, idx) => {
-        // Handle simple CSVs (doesn't handle commas inside quotes perfectly, but better than nothing)
         const cols = line.split(',');
-        if (cols.length < 2) return null; // Needs at least date and description
+        if (cols.length < 2) return null;
         
-        // Flexible Date Parsing
         let dateStr = cols[0] || '';
-        // If date is invalid or empty, default to today, but try to keep valid ones
         if (dateStr.length < 5) dateStr = new Date().toISOString();
 
         const amountStr = cols[2] || '0';
-        // Clean currency symbols
         const cleanAmount = amountStr.replace(/[$,]/g, '');
         const amount = parseFloat(cleanAmount);
         
@@ -254,7 +325,7 @@ export default function StatementAnalyzer() {
           amount: amount,
           type: amount < 0 ? 'credit' : 'debit'
         };
-      }).filter(t => t && t.description && t.amount !== 0); // Filter out empty rows/invalid amounts
+      }).filter(t => t && t.description && t.amount !== 0);
       
       if (newTransactions.length > 0) {
         setTransactions(newTransactions);
@@ -270,287 +341,369 @@ export default function StatementAnalyzer() {
     setTransactions(prev => prev.filter(t => t.id !== id));
   };
 
-  // --- Render Views ---
+  // --- Views ---
 
-  if (view === 'upload' || !processedData) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 font-sans">
-        <div className="max-w-xl w-full text-center space-y-8">
-          <div className="space-y-2">
-            <div className="w-16 h-16 bg-indigo-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-indigo-200">
-              <Shield className="text-white w-8 h-8" />
-            </div>
-            <h1 className="text-3xl font-bold text-slate-900">Statement Analyzer</h1>
-            <p className="text-slate-500">Unlock insights from your credit card usage. <br/>Visualize spending, track rewards, and find savings.</p>
-          </div>
+  const UploadView = () => (
+    <Box sx={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      p: 2 
+    }}>
+      <Container maxWidth="sm" sx={{ textAlign: 'center' }}>
+        <Box sx={{ mb: 4 }}>
+          <Box sx={{ 
+            width: 64, 
+            height: 64, 
+            bgcolor: 'primary.main', 
+            borderRadius: 4, 
+            mx: 'auto', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            boxShadow: '0 10px 15px -3px rgba(79, 70, 229, 0.4)'
+          }}>
+            <Shield color="white" size={32} />
+          </Box>
+          <Typography variant="h4" sx={{ mt: 3, fontWeight: 800, color: 'text.primary' }}>
+            Statement Analyzer
+          </Typography>
+          <Typography variant="body1" sx={{ mt: 1, color: 'text.secondary' }}>
+            Unlock insights from your credit card usage. <br/>Visualize spending, track rewards, and find savings.
+          </Typography>
+        </Box>
 
-          <div 
-            className={`
-              border-2 border-dashed rounded-3xl p-12 transition-all duration-300 ease-in-out
-              flex flex-col items-center justify-center gap-4 cursor-pointer relative
-              ${isDragging ? 'border-indigo-500 bg-indigo-50 scale-102' : 'border-slate-300 bg-white hover:border-indigo-300'}
-            `}
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-          >
-            <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center">
-              <Upload className="w-8 h-8" />
-            </div>
-            <div className="text-center">
-              <p className="text-lg font-semibold text-slate-700">Drop your statement here</p>
-              <p className="text-sm text-slate-400 mt-1">Supports <span className="font-bold text-indigo-600">.CSV</span> files only</p>
-            </div>
-            <label className="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors shadow-md shadow-indigo-200">
-              Browse Files
-              <input type="file" className="hidden" accept=".csv" onChange={handleFileUpload} />
-            </label>
-            
-            {error && (
-              <div className="absolute bottom-4 left-0 w-full px-4 animate-in fade-in slide-in-from-bottom-2">
-                <div className="bg-red-50 border border-red-100 text-red-600 text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-2 shadow-sm">
-                  <FileWarning className="w-4 h-4 flex-shrink-0" />
-                  {error}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <button 
-            onClick={handleLoadDemo}
-            className="text-slate-500 hover:text-indigo-600 text-sm font-medium flex items-center justify-center gap-2 transition-colors"
-          >
-            No file? Try with Demo Data <ArrowUpRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
-      {/* Navbar */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('upload')}>
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <Shield className="text-white w-5 h-5" />
-            </div>
-            <span className="font-bold text-lg tracking-tight">Statement Analyzer</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setView('upload')}
-              className="text-sm font-medium text-slate-500 hover:text-indigo-600"
-            >
-              Upload New
-            </button>
-            <div className="h-8 w-8 bg-slate-100 rounded-full flex items-center justify-center text-xs font-bold text-slate-600">
-              JD
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        
-        {/* Top Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <StatCard 
-            title="Total Spend" 
-            value={`$${processedData.totalSpend.toFixed(2)}`} 
-            subtext="This Statement"
-            icon={DollarSign}
-            colorClass="bg-slate-800 text-white"
-          />
-          <StatCard 
-            title="Reward Points" 
-            value={`${processedData.totalPoints.toLocaleString()} pts`} 
-            subtext="Estimated Earned"
-            icon={Award}
-            colorClass="bg-amber-500 text-white"
-          />
-          <StatCard 
-            title="Potential Savings" 
-            value={`$${processedData.insights.reduce((acc, curr) => acc + Number(curr.saving || 0), 0)}`} 
-            subtext="Optimizable Spend"
-            icon={TrendingUp}
-            colorClass="bg-green-500 text-white"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Paper
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+          elevation={0}
+          sx={{
+            p: 6,
+            border: '2px dashed',
+            borderColor: isDragging ? 'primary.main' : '#cbd5e1',
+            bgcolor: isDragging ? '#eef2ff' : 'white',
+            borderRadius: 6,
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 2,
+            position: 'relative',
+            '&:hover': { borderColor: 'primary.light' }
+          }}
+        >
+          <Box sx={{ width: 64, height: 64, bgcolor: '#eef2ff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Upload color="#4f46e5" size={32} />
+          </Box>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>Drop your statement here</Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>Supports <strong>.CSV</strong> files only</Typography>
+          </Box>
           
-          {/* Left Column: Breakdown & Insights */}
-          <div className="lg:col-span-2 space-y-8">
-            
-            {/* Spend Breakdown */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-              <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
-                <PieChart className="w-5 h-5 text-indigo-600" />
-                Category Breakdown
-              </h2>
-              <div className="space-y-1">
-                {processedData.sortedCategories.map((cat) => {
-                  const config = CATEGORIES[cat.key];
-                  const percentage = ((cat.amount / processedData.totalSpend) * 100).toFixed(1);
-                  return (
-                    <ProgressBar 
-                      key={cat.key}
-                      label={config.label}
-                      amount={cat.amount}
-                      total={processedData.totalSpend}
-                      color={config.color}
-                      percentage={percentage}
-                    />
-                  );
-                })}
-              </div>
-            </div>
+          <Button
+            component="label"
+            variant="contained"
+            sx={{ 
+              textTransform: 'none', 
+              borderRadius: 3, 
+              px: 4, 
+              py: 1.5,
+              fontWeight: 600,
+              boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2)'
+            }}
+          >
+            Browse Files
+            <input type="file" hidden accept=".csv" onChange={handleFileUpload} />
+          </Button>
 
-            {/* Transaction List */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col overflow-hidden max-h-[600px]">
-              {/* Header Section */}
-              <div className="p-6 border-b border-slate-100 bg-white z-10">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <h2 className="text-lg font-bold flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-indigo-600" />
-                    Transactions
-                  </h2>
-                  <div className="relative group">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 group-focus-within:text-indigo-500 transition-colors" />
-                    <input 
-                      type="text" 
-                      placeholder="Search merchant..." 
-                      className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-64 transition-all"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
+          {error && (
+            <Box sx={{ 
+              position: 'absolute', 
+              bottom: 16, 
+              left: 0, 
+              right: 0, 
+              px: 4 
+            }}>
+              <Paper sx={{ 
+                bgcolor: '#fef2f2', 
+                color: '#dc2626', 
+                p: 1.5, 
+                borderRadius: 2, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                gap: 1,
+                border: '1px solid #fecaca'
+              }}>
+                <FileWarning size={16} />
+                <Typography variant="caption" fontWeight={600}>{error}</Typography>
+              </Paper>
+            </Box>
+          )}
+        </Paper>
 
-              {/* Scrollable Table Section */}
-              <div className="overflow-y-auto overflow-x-auto flex-1">
-                <table className="w-full text-left border-collapse relative">
-                  <thead className="sticky top-0 bg-slate-50 z-10 shadow-sm">
-                    <tr className="text-xs font-semibold text-slate-500 border-b border-slate-200 uppercase tracking-wider">
-                      <th className="py-3 pl-6 w-24">Date</th>
-                      <th className="py-3 px-2">Merchant</th>
-                      <th className="py-3 px-2 hidden sm:table-cell">Category</th>
-                      <th className="py-3 px-2 hidden sm:table-cell text-right">Points</th>
-                      <th className="py-3 px-2 text-right">Amount</th>
-                      <th className="py-3 pr-6 w-10"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-sm divide-y divide-slate-50">
-                    {transactions
-                      .filter(t => t.description.toLowerCase().includes(searchTerm.toLowerCase()))
-                      .map((t) => {
-                        const cat = CATEGORIES[categorizeTransaction(t.description)];
-                        const isCredit = t.type === 'credit';
-                        return (
-                          <tr key={t.id} className="hover:bg-indigo-50/30 transition-colors group">
-                            <td className="py-4 pl-6 text-slate-500 whitespace-nowrap">{t.date.split('T')[0]}</td>
-                            <td className="py-4 px-2 font-medium text-slate-700">
-                              <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${isCredit ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500'}`}>
-                                  {isCredit ? <ArrowDownRight className="w-4 h-4" /> : <cat.icon className="w-4 h-4" />}
-                                </div>
-                                <span className="truncate max-w-[140px] sm:max-w-full">{t.description}</span>
-                              </div>
-                            </td>
-                            <td className="py-4 px-2 hidden sm:table-cell">
-                              <span className={`text-xs px-2 py-1 rounded-full font-medium bg-opacity-10 ${cat.color.replace('bg-', 'text-')} ${cat.color}`}>
-                                {cat.label}
-                              </span>
-                            </td>
-                            <td className="py-4 px-2 hidden sm:table-cell text-right text-amber-600 font-medium text-xs">
-                              {!isCredit && `+${t.points || 0}`}
-                            </td>
-                            <td className={`py-4 px-2 text-right font-bold ${isCredit ? 'text-green-600' : 'text-slate-800'}`}>
-                              {isCredit ? '+' : ''}${Math.abs(t.amount).toFixed(2)}
-                            </td>
-                            <td className="py-4 pr-6 text-right">
-                              <button 
-                                onClick={() => deleteTransaction(t.id)}
-                                className="p-1 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                                title="Remove transaction"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-                
-                {transactions.filter(t => t.description.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                    <Search className="w-8 h-8 mb-2 opacity-50" />
-                    <p>No transactions found matching "{searchTerm}"</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+        <Button 
+          onClick={handleLoadDemo}
+          endIcon={<ArrowUpRight size={16} />}
+          sx={{ mt: 4, textTransform: 'none', color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+        >
+          No file? Try with Demo Data
+        </Button>
+      </Container>
+    </Box>
+  );
 
-          {/* Right Column: AI Insights Panel */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 space-y-6">
+  const DashboardView = () => (
+    <Box sx={{ pb: 8 }}>
+      <AppBar position="sticky" color="inherit" elevation={1} sx={{ bgcolor: 'white', borderBottom: '1px solid #e2e8f0' }}>
+        <Container maxWidth="xl">
+          <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }} onClick={() => setView('upload')}>
+              <Box sx={{ width: 32, height: 32, bgcolor: 'primary.main', borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Shield color="white" size={20} />
+              </Box>
+              <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}>Statement Analyzer</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Button sx={{ textTransform: 'none', color: 'text.secondary' }} onClick={() => setView('upload')}>Upload New</Button>
+              <Avatar sx={{ width: 32, height: 32, bgcolor: '#f1f5f9', color: '#475569', fontSize: '0.875rem', fontWeight: 700 }}>JD</Avatar>
+            </Box>
+          </Toolbar>
+        </Container>
+      </AppBar>
+
+      <Container maxWidth="xl" sx={{ mt: 4 }}>
+        {/* Top Stats */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} md={4}>
+            <StatCard 
+              title="Total Spend" 
+              value={`$${processedData.totalSpend.toFixed(2)}`} 
+              subtext="This Statement"
+              icon={DollarSign}
+              colorBg="#1e293b" // slate-800
+              colorText="white"
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <StatCard 
+              title="Reward Points" 
+              value={`${processedData.totalPoints.toLocaleString()} pts`} 
+              subtext="Estimated Earned"
+              icon={Award}
+              colorBg="#f59e0b" // amber-500
+              colorText="white"
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <StatCard 
+              title="Potential Savings" 
+              value={`$${processedData.insights.reduce((acc, curr) => acc + Number(curr.saving || 0), 0)}`} 
+              subtext="Optimizable Spend"
+              icon={TrendingUp}
+              colorBg="#22c55e" // green-500
+              colorText="white"
+            />
+          </Grid>
+        </Grid>
+
+        <Grid container spacing={4}>
+          {/* Main Content Column */}
+          <Grid item xs={12} lg={8}>
+            <Stack spacing={4}>
               
-              {/* Smart Insights */}
-              <div className="bg-white p-6 rounded-2xl shadow-lg shadow-indigo-50 border border-indigo-100 overflow-hidden relative">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
-                <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-slate-800">
-                  <Zap className="w-5 h-5 text-amber-500 fill-amber-500" />
-                  Smart Insights
-                </h2>
-                <div className="space-y-1">
+              {/* Category Breakdown */}
+              <Card sx={{ borderRadius: 4, boxShadow: '0px 2px 4px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <PieChart size={20} color="#4f46e5" />
+                    Category Breakdown
+                  </Typography>
+                  <Box>
+                    {processedData.sortedCategories.map((cat) => {
+                      const config = CATEGORIES[cat.key];
+                      const percentage = ((cat.amount / processedData.totalSpend) * 100).toFixed(1);
+                      return (
+                        <CategoryProgressBar 
+                          key={cat.key}
+                          label={config.label}
+                          amount={cat.amount}
+                          total={processedData.totalSpend}
+                          color={config.color}
+                          percentage={percentage}
+                        />
+                      );
+                    })}
+                  </Box>
+                </CardContent>
+              </Card>
+
+              {/* Transactions Table */}
+              <Card sx={{ borderRadius: 4, boxShadow: '0px 2px 4px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: 600 }}>
+                <Box sx={{ p: 3, borderBottom: '1px solid #f1f5f9', display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, gap: 2 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <FileText size={20} color="#4f46e5" />
+                    Transactions
+                  </Typography>
+                  <TextField 
+                    size="small"
+                    placeholder="Search merchant..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Search size={16} color="#94a3b8" />
+                        </InputAdornment>
+                      ),
+                      sx: { borderRadius: 2, bgcolor: '#f8fafc', '& fieldset': { borderColor: '#e2e8f0' } }
+                    }}
+                    sx={{ width: { xs: '100%', sm: 250 } }}
+                  />
+                </Box>
+
+                <TableContainer sx={{ flex: 1, overflowY: 'auto' }}>
+                  <Table stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ bgcolor: '#f8fafc', color: '#64748b', fontWeight: 600 }}>Date</TableCell>
+                        <TableCell sx={{ bgcolor: '#f8fafc', color: '#64748b', fontWeight: 600 }}>Merchant</TableCell>
+                        <TableCell sx={{ bgcolor: '#f8fafc', color: '#64748b', fontWeight: 600, display: { xs: 'none', sm: 'table-cell' } }}>Category</TableCell>
+                        <TableCell align="right" sx={{ bgcolor: '#f8fafc', color: '#64748b', fontWeight: 600, display: { xs: 'none', sm: 'table-cell' } }}>Points</TableCell>
+                        <TableCell align="right" sx={{ bgcolor: '#f8fafc', color: '#64748b', fontWeight: 600 }}>Amount</TableCell>
+                        <TableCell sx={{ bgcolor: '#f8fafc' }} />
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {transactions
+                        .filter(t => t.description.toLowerCase().includes(searchTerm.toLowerCase()))
+                        .map((t) => {
+                          const cat = CATEGORIES[categorizeTransaction(t.description)];
+                          const isCredit = t.type === 'credit';
+                          return (
+                            <TableRow key={t.id} hover>
+                              <TableCell sx={{ color: '#64748b', whiteSpace: 'nowrap' }}>{t.date.split('T')[0]}</TableCell>
+                              <TableCell>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                  <Avatar sx={{ width: 32, height: 32, bgcolor: isCredit ? '#dcfce7' : '#f1f5f9', color: isCredit ? '#16a34a' : '#64748b' }}>
+                                    {isCredit ? <ArrowDownRight size={16} /> : <cat.icon size={16} />}
+                                  </Avatar>
+                                  <Typography variant="body2" sx={{ fontWeight: 500, color: '#334155' }}>{t.description}</Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                                <Chip 
+                                  label={cat.label} 
+                                  size="small" 
+                                  sx={{ 
+                                    bgcolor: `${cat.color}15`, // 10% opacity
+                                    color: cat.color,
+                                    fontWeight: 600,
+                                    fontSize: '0.75rem'
+                                  }} 
+                                />
+                              </TableCell>
+                              <TableCell align="right" sx={{ color: '#d97706', fontWeight: 500, display: { xs: 'none', sm: 'table-cell' } }}>
+                                {!isCredit && `+${t.points}`}
+                              </TableCell>
+                              <TableCell align="right" sx={{ fontWeight: 700, color: isCredit ? '#16a34a' : '#1e293b' }}>
+                                {isCredit ? '+' : ''}${Math.abs(t.amount).toFixed(2)}
+                              </TableCell>
+                              <TableCell align="right">
+                                <IconButton size="small" onClick={() => deleteTransaction(t.id)} sx={{ color: '#cbd5e1', '&:hover': { color: '#ef4444', bgcolor: '#fef2f2' } }}>
+                                  <Trash2 size={16} />
+                                </IconButton>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                    </TableBody>
+                  </Table>
+                  {transactions.filter(t => t.description.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
+                    <Box sx={{ py: 8, textAlign: 'center', color: '#94a3b8' }}>
+                      <Search size={32} style={{ opacity: 0.5, marginBottom: 8 }} />
+                      <Typography>No transactions found matching "{searchTerm}"</Typography>
+                    </Box>
+                  )}
+                </TableContainer>
+              </Card>
+            </Stack>
+          </Grid>
+
+          {/* Right Column: Insights */}
+          <Grid item xs={12} lg={4}>
+            <Box sx={{ position: 'sticky', top: 96 }}>
+              <Card sx={{ 
+                borderRadius: 4, 
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', 
+                border: '1px solid #e0e7ff', 
+                overflow: 'hidden', 
+                position: 'relative',
+                mb: 3
+              }}>
+                <Box sx={{ height: 4, background: 'linear-gradient(to right, #6366f1, #a855f7, #ec4899)' }} />
+                <CardContent sx={{ p: 3 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Zap size={20} color="#f59e0b" fill="#f59e0b" />
+                    Smart Insights
+                  </Typography>
+                  
                   {processedData.insights.length > 0 ? (
                     processedData.insights.map((insight, idx) => (
                       <InsightCard key={idx} {...insight} />
                     ))
                   ) : (
-                    <div className="text-center py-8 text-slate-400 text-sm">
-                      <p>Great job! No unusual spending patterns detected this month.</p>
-                    </div>
+                    <Box sx={{ textAlign: 'center', py: 4, color: '#94a3b8' }}>
+                      <Typography variant="body2">Great job! No unusual spending patterns detected.</Typography>
+                    </Box>
                   )}
                   
-                  {/* Static Tip */}
                   <InsightCard 
                     title="Maximize Rewards" 
                     description="You spent heavily on Dining. Switch to the Gold Card to earn 4x points instead of 3x." 
                     saving={0}
                     type="info"
                   />
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
-              {/* Rewards Summary Small */}
-              <div className="bg-gradient-to-br from-indigo-600 to-purple-700 p-6 rounded-2xl text-white shadow-xl shadow-indigo-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-lg">Rewards Status</h3>
-                  <Award className="w-6 h-6 text-yellow-300" />
-                </div>
-                <div className="mb-6">
-                  <p className="text-indigo-200 text-sm mb-1">Total Points Earned</p>
-                  <p className="text-4xl font-bold">{processedData.totalPoints.toLocaleString()}</p>
-                </div>
-                <div className="bg-white bg-opacity-10 rounded-lg p-3 backdrop-blur-sm">
-                  <p className="text-xs text-indigo-100 leading-relaxed">
-                    You can redeem these points for a <strong>${(processedData.totalPoints / 100).toFixed(2)}</strong> statement credit or transfer to travel partners.
-                  </p>
-                </div>
-              </div>
+              <Paper sx={{ 
+                p: 3, 
+                borderRadius: 4, 
+                background: 'linear-gradient(135deg, #4f46e5 0%, #7e22ce 100%)',
+                color: 'white',
+                boxShadow: '0 10px 15px -3px rgba(79, 70, 229, 0.4)'
+              }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6" fontWeight={700}>Rewards Status</Typography>
+                  <Award size={24} color="#fde047" />
+                </Box>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="body2" sx={{ color: '#c7d2fe' }}>Total Points Earned</Typography>
+                  <Typography variant="h3" fontWeight={800}>{processedData.totalPoints.toLocaleString()}</Typography>
+                </Box>
+                <Box sx={{ bgcolor: 'rgba(255,255,255,0.1)', p: 1.5, borderRadius: 2, backdropFilter: 'blur(4px)' }}>
+                  <Typography variant="caption" sx={{ color: '#e0e7ff', lineHeight: 1.4 }}>
+                    Redeem for a <strong>${(processedData.totalPoints / 100).toFixed(2)}</strong> statement credit or transfer to travel partners.
+                  </Typography>
+                </Box>
+              </Paper>
+            </Box>
+          </Grid>
 
-            </div>
-          </div>
+        </Grid>
+      </Container>
+    </Box>
+  );
 
-        </div>
-      </main>
-    </div>
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      {view === 'upload' || !processedData ? <UploadView /> : <DashboardView />}
+    </ThemeProvider>
   );
 }
